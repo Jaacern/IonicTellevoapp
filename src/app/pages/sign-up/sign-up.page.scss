@@ -76,3 +76,12 @@ ion-content {
     opacity: 0.5; /* Transparencia de la línea */
   }
 }
+.toast-success {
+  background-color: #28a745;  /* Verde */
+  color: white;
+}
+
+.toast-error {
+  background-color: #dc3545;  /* Rojo */
+  color: white;
+}

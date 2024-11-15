@@ -25,7 +25,26 @@ export class HomePage implements OnInit {
     if (usuarioGuardado) {
       // Redirigir directamente a la página de selección de rol si hay un usuario guardado
       this.router.navigate(['/role-selection']);
+    } else {
+      // Si no hay usuario guardado, intentar cargar el email y password desde localStorage
+      const emailGuardado = localStorage.getItem('email');
+      const passwordGuardado = localStorage.getItem('password');
+      
+      if (emailGuardado && passwordGuardado) {
+        this.email = emailGuardado;
+        this.password = passwordGuardado;
+      }
     }
+  }
+
+  // Función para mostrar un toast con el mensaje
+  async mostrarToast(message: string, color: string = 'danger') {
+    const toast = document.createElement('ion-toast');
+    toast.message = message;
+    toast.duration = 3000; // Duración en milisegundos
+    toast.color = color; // Puede ser 'danger', 'success', 'primary', etc.
+    document.body.appendChild(toast);
+    return toast.present();
   }
 
   async onSubmit() {
@@ -42,6 +61,10 @@ export class HomePage implements OnInit {
       // Guardar el usuario actual en el storage
       await this.storageService.setItem('usuario_actual', usuarioInfo);
 
+      // Además, guardar email y password en localStorage
+      localStorage.setItem('email', this.email.trim());
+      localStorage.setItem('password', this.password.trim());
+
       // Redirigir a la página de selección de rol
       this.router.navigate(['/role-selection']);
     } catch (error) {
@@ -49,9 +72,9 @@ export class HomePage implements OnInit {
     
       // Verificar si el error tiene la propiedad 'message'
       if (error instanceof Error) {
-        alert(error.message);  // Mostrar el mensaje del error
+        this.mostrarToast(error.message);  // Mostrar el mensaje del error en un toast
       } else {
-        alert('Ocurrió un error desconocido.');
+        this.mostrarToast('Ocurrió un error desconocido.');  // Mostrar un mensaje genérico
       }
     }
   }

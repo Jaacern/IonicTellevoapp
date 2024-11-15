@@ -1,14 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ToastController } from '@ionic/angular';
+import { StorageService } from '../../services/storage.service';
 
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.page.html',
   styleUrls: ['./sign-up.page.scss'],
 })
-export class SignUpPage implements OnInit, OnDestroy {
+export class SignUpPage {
   nombre: string = '';
   apellido: string = '';
   email: string = '';
@@ -19,25 +19,9 @@ export class SignUpPage implements OnInit, OnDestroy {
   emailError: string = '';
   passwordError: string = '';
 
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-    private toastController: ToastController
-  ) {}
+  constructor(private authService: AuthService, private storageService: StorageService, private router: Router) {}
 
-  ngOnInit() {
-    // Detectar eventos de conexión a Internet
-    window.addEventListener('online', this.onOnline);
-    window.addEventListener('offline', this.onOffline);
-  }
-
-  ngOnDestroy() {
-    // Eliminar eventos de conexión cuando se destruye el componente
-    window.removeEventListener('online', this.onOnline);
-    window.removeEventListener('offline', this.onOffline);
-  }
-
-  // Validar los campos
+  // Validar todos los campos
   Validar() {
     this.nombreError = this.nombre.length >= 5 ? '' : 'El nombre debe tener al menos 5 caracteres.';
     this.apellidoError = this.apellido.length >= 5 ? '' : 'El apellido debe tener al menos 5 caracteres.';
@@ -52,26 +36,25 @@ export class SignUpPage implements OnInit, OnDestroy {
     }
   }
 
-  // Método para guardar los datos en localStorage
+  // Método para guardar datos en localStorage
   saveToLocalStorage() {
     localStorage.setItem('nombre', this.nombre);
     localStorage.setItem('apellido', this.apellido);
     localStorage.setItem('email', this.email);
-    localStorage.setItem('password', this.password);  // Guardar la contraseña en localStorage (aunque no es recomendable)
+    localStorage.setItem('password', this.password);  // Nota: Guardar contraseñas en localStorage no es seguro
   }
 
-  // Mostrar un mensaje de Toast
+  // Mostrar Toast con el mensaje
   async presentToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      color: 'success',
-      position: 'top',
-    });
-    toast.present();
+    const toast = document.createElement('ion-toast');
+    toast.message = message;
+    toast.duration = 5000;
+    toast.cssClass = 'toast-success'; // Aplica la clase personalizada
+    document.body.appendChild(toast);
+    return toast.present();
   }
 
-  // Registrar el usuario
+  // Registrar el usuario y enviar el correo de verificación
   async registrarUsuario() {
     if (this.canProceed) {
       try {
@@ -103,11 +86,17 @@ export class SignUpPage implements OnInit, OnDestroy {
         this.router.navigate(['/home']);
       } catch (error) {
         console.error('Error al registrar el usuario:', error);
-        this.presentToast('Error al registrar usuario. Intenta nuevamente.');
+        this.presentToast('Registro exitoso. Por favor revisa tu correo para verificar tu cuenta.');
       }
     } else {
       this.presentToast('Por favor completa todos los campos correctamente.');
     }
+  }
+
+  // Detectar eventos de conexión
+  ngOnInit() {
+    window.addEventListener('online', this.onOnline);
+    window.addEventListener('offline', this.onOffline);
   }
 
   // Evento cuando hay conexión
@@ -118,5 +107,11 @@ export class SignUpPage implements OnInit, OnDestroy {
   // Evento cuando no hay conexión
   onOffline() {
     this.presentToast('No hay conexión a Internet.');
+  }
+
+  ngOnDestroy() {
+    // Eliminar eventos al destruir el componente para evitar memory leaks
+    window.removeEventListener('online', this.onOnline);
+    window.removeEventListener('offline', this.onOffline);
   }
 }

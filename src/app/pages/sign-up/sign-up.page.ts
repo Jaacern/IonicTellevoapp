@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { StorageService } from '../../services/storage.service';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.page.html',
   styleUrls: ['./sign-up.page.scss'],
 })
-export class SignUpPage {
+export class SignUpPage implements OnInit, OnDestroy {
   nombre: string = '';
   apellido: string = '';
   email: string = '';
@@ -18,10 +18,27 @@ export class SignUpPage {
   apellidoError: string = '';
   emailError: string = '';
   passwordError: string = '';
+  isOnline: boolean = navigator.onLine;  // Establece el estado inicial de la conexión
 
-  constructor(private authService: AuthService, private storageService: StorageService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private toastController: ToastController
+  ) {}
 
-  // Validar todos los campos
+  ngOnInit() {
+    // Detectar eventos de conexión a Internet
+    window.addEventListener('online', this.onOnline.bind(this));
+    window.addEventListener('offline', this.onOffline.bind(this));
+  }
+
+  ngOnDestroy() {
+    // Eliminar eventos de conexión cuando se destruye el componente
+    window.removeEventListener('online', this.onOnline.bind(this));
+    window.removeEventListener('offline', this.onOffline.bind(this));
+  }
+
+  // Validar los campos
   Validar() {
     this.nombreError = this.nombre.length >= 5 ? '' : 'El nombre debe tener al menos 5 caracteres.';
     this.apellidoError = this.apellido.length >= 5 ? '' : 'El apellido debe tener al menos 5 caracteres.';
@@ -36,27 +53,34 @@ export class SignUpPage {
     }
   }
 
-  // Método para guardar datos en localStorage
+  // Método para guardar los datos en localStorage
   saveToLocalStorage() {
     localStorage.setItem('nombre', this.nombre);
     localStorage.setItem('apellido', this.apellido);
     localStorage.setItem('email', this.email);
-    localStorage.setItem('password', this.password);  // Nota: Guardar contraseñas en localStorage no es seguro
+    localStorage.setItem('password', this.password);  // Guardar la contraseña en localStorage (aunque no es recomendable)
   }
 
-  // Mostrar Toast con el mensaje
+  // Mostrar un mensaje de Toast
   async presentToast(message: string) {
-    const toast = document.createElement('ion-toast');
-    toast.message = message;
-    toast.duration = 5000;
-    toast.cssClass = 'toast-success'; // Aplica la clase personalizada
-    document.body.appendChild(toast);
-    return toast.present();
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'success',
+      position: 'top',
+    });
+    toast.present();
   }
 
-  // Registrar el usuario y enviar el correo de verificación
+  // Registrar el usuario
   async registrarUsuario() {
     if (this.canProceed) {
+      if (!this.isOnline) {
+        // Si no hay conexión, mostramos un mensaje de alerta
+        this.presentToast('No hay conexión a Internet. Los datos se guardaron localmente.');
+        return; // No continuar con el registro si no hay internet
+      }
+
       try {
         // Registrar usuario en Firebase Authentication
         const credenciales = await this.authService.register(this.email.trim(), this.password.trim());
@@ -86,32 +110,22 @@ export class SignUpPage {
         this.router.navigate(['/home']);
       } catch (error) {
         console.error('Error al registrar el usuario:', error);
-        this.presentToast('Registro exitoso. Por favor revisa tu correo para verificar tu cuenta.');
+        this.presentToast('Error al registrar usuario. Intenta nuevamente.');
       }
     } else {
       this.presentToast('Por favor completa todos los campos correctamente.');
     }
   }
 
-  // Detectar eventos de conexión
-  ngOnInit() {
-    window.addEventListener('online', this.onOnline);
-    window.addEventListener('offline', this.onOffline);
-  }
-
   // Evento cuando hay conexión
   onOnline() {
+    this.isOnline = true;
     this.presentToast('¡Conexión restaurada!');
   }
 
   // Evento cuando no hay conexión
   onOffline() {
+    this.isOnline = false;
     this.presentToast('No hay conexión a Internet.');
-  }
-
-  ngOnDestroy() {
-    // Eliminar eventos al destruir el componente para evitar memory leaks
-    window.removeEventListener('online', this.onOnline);
-    window.removeEventListener('offline', this.onOffline);
   }
 }

@@ -19,6 +19,8 @@ export class CrearViajePage implements OnInit, OnDestroy {
   descripcion: string = '';
   asientos: number | null = null;
   costo: number | null = null;
+  patente: string = ''; // Propiedad para la patente
+  horaSalida: string = ''; // Propiedad para la hora de salida
   ubicacionInicial: [number, number] = [-74.5, 40];
   destinoCoords: [number, number] | null = null;
   suggestions: any[] = [];
@@ -39,9 +41,6 @@ export class CrearViajePage implements OnInit, OnDestroy {
   async ngOnInit() {
     await this.storage.create();
     (mapboxgl as any).accessToken = environment.accessToken;
-
-    // Recuperar datos del formulario guardados (si existen)
-    await this.loadFormFromLocalStorage();
 
     this.afAuth.authState.subscribe((user) => {
       if (user) {
@@ -69,38 +68,16 @@ export class CrearViajePage implements OnInit, OnDestroy {
 
   loadUserExperience() {
     if (this.userId) {
-      this.db.object(`usuarios/${this.userId}/profile`).valueChanges().subscribe((profile: any) => {
-        if (profile) {
-          this.userExperience = profile.experience || 0;
-          this.userLevel = profile.level || 1;
-        }
-      });
+      this.db
+        .object(`usuarios/${this.userId}/profile`)
+        .valueChanges()
+        .subscribe((profile: any) => {
+          if (profile) {
+            this.userExperience = profile.experience || 0;
+            this.userLevel = profile.level || 1;
+          }
+        });
     }
-  }
-
-  // Cargar datos del formulario desde Ionic Storage (o localStorage)
-  async loadFormFromLocalStorage() {
-    const formData = await this.storage.get('formularioViaje');
-    if (formData) {
-      this.destino = formData.destino || '';
-      this.descripcion = formData.descripcion || '';
-      this.asientos = formData.asientos || null;
-      this.costo = formData.costo || null;
-      this.destinoCoords = formData.destinoCoords || null;
-    }
-  }
-
-  // Guardar los datos del formulario en Ionic Storage
-  async saveFormToLocalStorage() {
-    const formData = {
-      destino: this.destino,
-      descripcion: this.descripcion,
-      asientos: this.asientos,
-      costo: this.costo,
-      destinoCoords: this.destinoCoords,
-    };
-    await this.storage.set('formularioViaje', formData);
-    console.log('Formulario guardado en Ionic Storage:', formData);
   }
 
   buscarDestino() {
@@ -108,14 +85,14 @@ export class CrearViajePage implements OnInit, OnDestroy {
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${this.destino}.json?access_token=${environment.accessToken}&autocomplete=true&limit=5`;
 
       fetch(url)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           this.suggestions = data.features.map((feature: any) => ({
             place_name: feature.place_name,
-            coordinates: feature.geometry.coordinates
+            coordinates: feature.geometry.coordinates,
           }));
         })
-        .catch(error => console.error('Error al buscar destino:', error));
+        .catch((error) => console.error('Error al buscar destino:', error));
     } else {
       this.suggestions = [];
     }
@@ -126,9 +103,6 @@ export class CrearViajePage implements OnInit, OnDestroy {
     this.destino = placeName;
     this.suggestions = [];
     this.dibujarRuta(this.destinoCoords);
-
-    // Guardar los cambios en localStorage al seleccionar el destino
-    this.saveFormToLocalStorage();
   }
 
   async dibujarRuta(destinoCoords: [number, number]): Promise<[number, number][]> {
@@ -145,7 +119,7 @@ export class CrearViajePage implements OnInit, OnDestroy {
           type: 'LineString',
           coordinates: route,
         },
-        properties: {} // Asegúrate de que 'properties' esté presente
+        properties: {},
       };
 
       if (this.map.getSource('route')) {
@@ -153,7 +127,7 @@ export class CrearViajePage implements OnInit, OnDestroy {
       } else {
         this.map.addSource('route', {
           type: 'geojson',
-          data: geojson
+          data: geojson,
         });
 
         this.map.addLayer({
@@ -162,12 +136,12 @@ export class CrearViajePage implements OnInit, OnDestroy {
           source: 'route',
           layout: {
             'line-join': 'round',
-            'line-cap': 'round'
+            'line-cap': 'round',
           },
           paint: {
             'line-color': '#1DB954',
-            'line-width': 5
-          }
+            'line-width': 5,
+          },
         });
       }
 
@@ -178,15 +152,27 @@ export class CrearViajePage implements OnInit, OnDestroy {
     }
   }
 
+  validarPatente(): boolean {
+    const regex = /^[A-Z]{2}-\d{2}-[A-Z]{2}$|^[A-Z]{2}-[A-Z]{2}-\d{2}$/;
+    return regex.test(this.patente);
+  }
+
   isComplete(): boolean {
-    return this.destino !== '' && this.descripcion !== '' && this.asientos !== null && this.costo !== null;
+    return (
+      this.destino !== '' &&
+      this.descripcion !== '' &&
+      this.asientos !== null &&
+      this.costo !== null &&
+      this.validarPatente() &&
+      this.horaSalida !== ''
+    );
   }
 
   async mostrarAlerta(mensaje: string) {
     const alert = await this.alertController.create({
       header: 'Información',
       message: mensaje,
-      buttons: ['OK']
+      buttons: ['OK'],
     });
     await alert.present();
   }
@@ -202,6 +188,16 @@ export class CrearViajePage implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.validarPatente()) {
+      await this.mostrarAlerta('Por favor ingrese una patente válida (formato chileno).');
+      return;
+    }
+
+    if (this.horaSalida === '') {
+      await this.mostrarAlerta('Por favor ingrese una hora de salida.');
+      return;
+    }
+
     if (this.isComplete() && this.userId) {
       const rutaCoordenadas = await this.dibujarRuta(this.destinoCoords!);
 
@@ -210,38 +206,35 @@ export class CrearViajePage implements OnInit, OnDestroy {
         descripcion: this.descripcion,
         asientos: this.asientos,
         costo: this.costo,
+        patente: this.patente,
+        horaSalida: this.horaSalida, // Agregar hora de salida
         ubicacionInicial: this.ubicacionInicial,
         destinoCoords: this.destinoCoords,
         asientosDisponibles: this.asientos,
         conductorId: this.userId,
-        estado: 'activo', // Establecer estado como activo
+        estado: 'activo',
         ruta: rutaCoordenadas,
       };
 
-      // Verificar si hay conexión a Internet
-      if (navigator.onLine) {
-        // Si hay conexión, se guarda en Firebase
-        const viajeRef = this.db.list('viajes').push(viajeData);
-        this.viajeId = viajeRef.key || '';
-        await this.db.object(`viajes/${this.viajeId}`).update({ id: this.viajeId });
+      const viajeRef = this.db.list('viajes').push(viajeData);
+      this.viajeId = viajeRef.key || '';
+      await this.db.object(`viajes/${this.viajeId}`).update({ id: this.viajeId });
 
-        // Guardar en la ruta específica del usuario
-        await this.db.list(`usuarios/${this.userId}/viajes`).set(this.viajeId, viajeData);
+      await this.guardarViajeLocal(viajeData);
 
-        // Limpiar los datos del formulario en localStorage
-        await this.storage.remove('formularioViaje');
-
-        // Mostrar mensaje de éxito
-        await this.mostrarAlerta('Su viaje se ha creado correctamente.');
-        this.router.navigate(['/conductor']);
-      } else {
-        // Si no hay conexión, se guarda en localStorage y se muestra alerta
-        await this.saveFormToLocalStorage();
-        await this.mostrarAlerta('No tienes conexión a internet, tu viaje se confirmará cuando tengas señal.');
-      }
+      this.updateExperience(5);
+      await this.mostrarAlerta('Su viaje se ha creado correctamente.');
+      this.router.navigate(['/conductor']);
     } else {
       await this.mostrarAlerta('Por favor, completa todos los campos.');
     }
+  }
+
+  async guardarViajeLocal(viajeData: any) {
+    let viajesLocales = (await this.storage.get('viajes')) || [];
+    viajesLocales.push(viajeData);
+    await this.storage.set('viajes', viajesLocales);
+    console.log('Viaje guardado en Ionic Storage:', viajeData);
   }
 
   updateExperience(points: number) {
@@ -253,7 +246,7 @@ export class CrearViajePage implements OnInit, OnDestroy {
     }
     this.db.object(`usuarios/${this.userId}/profile`).update({
       level: this.userLevel,
-      experience: this.userExperience
+      experience: this.userExperience,
     });
   }
 }

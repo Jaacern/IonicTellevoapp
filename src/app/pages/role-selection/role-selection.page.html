@@ -14,7 +14,19 @@
     <h1>Bienvenido, {{ userEmail }}</h1>
 
     <div *ngIf="viajeActivo; else roleSelection">
-      <h2>Ruta del Viaje Aceptado</h2>
+      <h2>Ruta del Viaje</h2>
+      
+      
+      <ion-card-content>
+        <p><strong>Destino:</strong> {{ viajeActivo.destino }}</p>
+        <p><strong>Descripción:</strong> {{ viajeActivo.descripcion }}</p>
+        <p><strong>Patente:</strong> {{ viajeActivo.patente }}</p>
+        <p><strong>Hora de salida:</strong> {{ viajeActivo.horaSalida }}</p>
+        <p><strong>Costo:</strong> {{ viajeActivo.costo | currency }}</p>
+        
+      </ion-card-content>
+      
+
       <div id="map" style="height: 300px;"></div>
       <ion-button expand="block" color="tertiary" (click)="recargarMapa()">Recargar Mapa</ion-button>
       <ion-button expand="block" color="danger" (click)="cancelarViaje()">Cancelar Viaje</ion-button>
@@ -35,5 +47,21 @@
         <ion-button expand="full" color="primary">Seleccionar Pasajero</ion-button>
       </div>
     </ng-template>
+  </div>
+  <div *ngIf="viajeGuardado" class="viaje-guardado-container">
+    <h2>Información de tu Viaje</h2>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Ruta hacia {{ viajeGuardado.destino }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Descripción:</strong> {{ viajeGuardado.descripcion }}</p>
+        <p><strong>Patente:</strong> {{ viajeGuardado.patente }}</p>
+        <p><strong>Hora de salida</strong>{{viajeGuardado.horaSalida}}</p>
+        <p><strong>Costo:</strong> {{ viajeGuardado.costo | currency }}</p>
+        <p><strong>Asientos Disponibles:</strong> {{ viajeGuardado.asientosDisponibles }}</p>
+        <p><strong>Ubicación Inicial:</strong> Lat: {{ viajeGuardado.ubicacionInicial[1] }}, Lng: {{ viajeGuardado.ubicacionInicial[0] }}</p>
+      </ion-card-content>
+    </ion-card>
   </div>
 </ion-content>

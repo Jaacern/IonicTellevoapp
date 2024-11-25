@@ -18,19 +18,6 @@ export class AuthService {
         await credenciales.user.sendEmailVerification();
       }
 
-      // Guardar los datos del usuario en Firestore
-      if (credenciales.user) {
-        const userData = {
-          uid: credenciales.user.uid,
-          email: credenciales.user.email,
-          emailVerified: credenciales.user.emailVerified,
-        };
-        await this.saveUserData(userData);
-
-        // Guardar en localStorage
-        this.saveUserToLocalStorage(userData);
-      }
-
       return credenciales;
     } catch (error) {
       console.error('Error al registrar el usuario:', error);
@@ -49,17 +36,6 @@ export class AuthService {
     }
   }
 
-  // Guardar datos del usuario en localStorage
-  private saveUserToLocalStorage(user: any) {
-    localStorage.setItem('user', JSON.stringify(user));
-  }
-
-  // Obtener datos del usuario desde localStorage
-  getUserFromLocalStorage() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  }
-
   // Iniciar sesión con correo electrónico
   async login(email: string, password: string) {
     try {
@@ -67,19 +43,6 @@ export class AuthService {
 
       // Verificar si el correo ha sido verificado
       if (credenciales.user?.emailVerified) {
-        // Guardar datos del usuario en Firestore y localStorage si no están guardados
-        if (credenciales.user) {
-          const userData = {
-            uid: credenciales.user.uid,
-            email: credenciales.user.email,
-            emailVerified: credenciales.user.emailVerified,
-          };
-
-          // Guardar en Firestore y localStorage
-          await this.saveUserData(userData);
-          this.saveUserToLocalStorage(userData);
-        }
-
         return credenciales;
       } else {
         throw new Error('Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión.');
@@ -93,17 +56,10 @@ export class AuthService {
   // Cerrar sesión
   async logout() {
     try {
-      // Limpiar el localStorage al cerrar sesión
-      localStorage.removeItem('user');
       await this.afAuth.signOut();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       throw error;
     }
-  }
-
-  // Comprobar si el usuario está autenticado usando localStorage
-  isAuthenticated() {
-    return this.getUserFromLocalStorage() !== null;
   }
 }

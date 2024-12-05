@@ -9,8 +9,12 @@ export class AuthService {
   constructor(private afAuth: AngularFireAuth, private firestore: AngularFirestore) {}
 
   // Registrar usuario con correo electrónico
+  // Modificar el método register
   async register(email: string, password: string) {
     try {
+      // Agregar un pequeño retraso aleatorio
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+      
       const credenciales = await this.afAuth.createUserWithEmailAndPassword(email, password);
       
       // Enviar el correo de verificación
@@ -19,17 +23,35 @@ export class AuthService {
       }
 
       return credenciales;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al registrar el usuario:', error);
+      
+      // Manejar específicamente el error de demasiadas solicitudes
+      if (error.code === 'auth/too-many-requests') {
+        throw new Error('Demasiados intentos. Por favor, espera unos minutos e intenta de nuevo.');
+      }
+      
       throw error;
     }
   }
 
-  // Guardar datos de usuario en Firestore
   async saveUserData(user: any) {
     try {
-      // Asegúrate de que estás usando el UID para guardar el documento del usuario en Firestore
-      return await this.firestore.collection('users').doc(user.uid).set(user);
+      // Asegúrate de usar el UID del usuario actual
+      const currentUser = this.afAuth.currentUser;
+      if (!currentUser) {
+        throw new Error('No hay usuario autenticado');
+      }
+  
+      return await this.firestore.collection('users').doc(user.uid).set({
+        // Elimina campos sensibles antes de guardar
+        uid: user.uid,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        email: user.email,
+        emailVerified: false,
+        // No guardes la contraseña en texto plano
+      });
     } catch (error) {
       console.error('Error al guardar datos del usuario en Firestore:', error);
       throw error;

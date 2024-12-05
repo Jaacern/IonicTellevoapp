@@ -40,45 +40,56 @@ export class SignUpPage {
     document.body.appendChild(toast);
     return toast.present();
   }
-
-  // Registrar el usuario y enviar el correo de verificación
   async registrarUsuario() {
     if (this.canProceed) {
       try {
         // Registrar usuario en Firebase Authentication
-        const credenciales = await this.authService.register(this.email.trim(), this.password.trim());
-
-        // Enviar correo de verificación
-        if (credenciales.user) {
-          await credenciales.user.sendEmailVerification();
+        const credenciales = await this.authService.register(
+          this.email.trim(), 
+          this.password.trim()
+        );
+  
+        // Verificar que exista un usuario
+        if (!credenciales.user) {
+          throw new Error('Registro fallido');
         }
-
-        // Crear el objeto de usuario para guardar en Firestore y Ionic Storage
+  
+        // Crear el objeto de usuario para guardar en Firestore
         const nuevoUsuario = {
-          uid: credenciales.user?.uid,
+          uid: credenciales.user.uid,
           nombre: this.nombre.trim(),
           apellido: this.apellido.trim(),
           email: this.email.trim(),
-          password: this.password.trim(), // Agregamos la contraseña para uso offline
+          // NO incluyas la contraseña
           emailVerified: false,
         };
-
+  
         // Guardar el usuario en Firestore
         await this.authService.saveUserData(nuevoUsuario);
-        console.log('Usuario registrado y guardado en Firestore:', nuevoUsuario);
-
+  
         // Guardar el usuario en Ionic Storage para uso offline
-        await this.storageService.setItem('user', nuevoUsuario);
-        console.log('Usuario guardado en Ionic Storage:', nuevoUsuario);
-
+        // Elimina información sensible antes de guardar
+        await this.storageService.setItem('user', {
+          uid: nuevoUsuario.uid,
+          nombre: nuevoUsuario.nombre,
+          apellido: nuevoUsuario.apellido,
+          email: nuevoUsuario.email
+        });
+  
         // Mensaje de éxito
-        this.presentToast('Registro exitoso. Por favor revisa tu correo para verificar tu cuenta.');
-
-        // Redirigir a la página de inicio de sesión
-        this.router.navigate(['/home']);
-      } catch (error) {
-        console.error('Error al registrar el usuario:', error);
-        this.presentToast('Se envio un correo de confirmacion por favor revisa tu correo.');
+        await this.presentToast('Registro exitoso. Por favor revisa tu correo para verificar tu cuenta.');
+  
+        // Navegación con un pequeño retraso
+        setTimeout(() => {
+          this.router.navigate(['/home']);
+        }, 3000);
+  
+      } catch (error: any) {
+        console.error('Error completo:', error);
+        
+        // Manejo de errores específicos
+        const errorMessage = error.message || 'Ocurrió un error durante el registro';
+        this.presentToast(errorMessage);
       }
     } else {
       this.presentToast('Por favor completa todos los campos correctamente.');

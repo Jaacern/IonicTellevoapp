@@ -9,6 +9,7 @@ import { Storage } from '@ionic/storage-angular';
 import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { NotificacionesService } from '../../services/notificaciones.service';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   selector: 'app-pasajero',
@@ -30,8 +31,12 @@ export class PasajeroPage implements OnInit, OnDestroy {
     private storage: Storage,
     private toastController: ToastController,
     private router: Router,
-    private notificacionesService: NotificacionesService
-  ) {}
+    private notificacionesService: NotificacionesService,
+    private authService: AuthService,
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
 
   async ngOnInit() {
     await this.storage.create();

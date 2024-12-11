@@ -40,11 +40,19 @@
         Iniciar Sesión
       </ion-button>
     </form>
-    <ion-item lines="none">
-      <p>¿No tienes una cuenta? <a href="/sign-up">Regístrate</a></p>
-    </ion-item>
-    <ion-item lines="none">
-      <p>¿Olvidaste tu contraseña? <a href="/recuperar">Recuperar Contraseña</a></p>
-    </ion-item>
+    <div class="ion-text-center ion-padding">
+      <p>
+        ¿No tienes una cuenta? 
+        <ion-text color="primary" [routerLink]="['/sign-up']" class="link-text">
+          Regístrate
+        </ion-text>
+      </p>
+      <p>
+        ¿Olvidaste tu contraseña? 
+        <ion-text color="primary" [routerLink]="['/recuperar']" class="link-text">
+          Recuperar Contraseña
+        </ion-text>
+      </p>
+    </div>
   </div>
 </ion-content>

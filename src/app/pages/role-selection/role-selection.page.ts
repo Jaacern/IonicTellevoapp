@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { NotificacionesService } from '../../services/notificaciones.service';
 import { Storage } from '@ionic/storage-angular';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   selector: 'app-role-selection',
@@ -29,8 +30,12 @@ export class RoleSelectionPage implements OnInit, OnDestroy {
     private afAuth: AngularFireAuth,
     private db: AngularFireDatabase,
     private notificacionesService: NotificacionesService,
-    private storage: Storage
-  ) {}
+    private storage: Storage,
+    private authService: AuthService,
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
 
   async ngOnInit() {
     await this.storage.create();

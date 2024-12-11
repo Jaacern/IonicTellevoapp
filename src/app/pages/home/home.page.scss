@@ -66,3 +66,20 @@ ion-content {
     opacity: 0.5; /* Transparencia de la línea */
   }
 }
+
+.link-text {
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  padding-left: 5px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.ion-text-center {
+  p {
+    margin: 10px 0;
+  }
+}

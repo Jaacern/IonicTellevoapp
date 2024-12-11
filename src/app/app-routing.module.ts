@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   {
@@ -26,43 +27,53 @@ const routes: Routes = [
   },
   {
     path: 'conductor',
-    loadChildren: () => import('./pages/conductor/conductor.module').then( m => m.ConductorPageModule)
+    loadChildren: () => import('./pages/conductor/conductor.module').then( m => m.ConductorPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'pasajero',
-    loadChildren: () => import('./pages/pasajero/pasajero.module').then( m => m.PasajeroPageModule)
+    loadChildren: () => import('./pages/pasajero/pasajero.module').then( m => m.PasajeroPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'role-selection',
-    loadChildren: () => import('./pages/role-selection/role-selection.module').then( m => m.RoleSelectionPageModule)
+    loadChildren: () => import('./pages/role-selection/role-selection.module').then( m => m.RoleSelectionPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'admin',
-    loadChildren: () => import('./pages/admin/admin.module').then( m => m.AdminPageModule)
+    loadChildren: () => import('./pages/admin/admin.module').then( m => m.AdminPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'perfil',
-    loadChildren: () => import('./pages/perfil/perfil.module').then( m => m.PerfilPageModule)
+    loadChildren: () => import('./pages/perfil/perfil.module').then( m => m.PerfilPageModule),
+    canActivate: [AuthGuard]
   },
 
   {
     path: 'crear-viaje',
-    loadChildren: () => import('./pages/crear-viaje/crear-viaje.module').then( m => m.CrearViajePageModule)
+    loadChildren: () => import('./pages/crear-viaje/crear-viaje.module').then( m => m.CrearViajePageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'historial',
-    loadChildren: () => import('./pages/historial/historial.module').then( m => m.HistorialPageModule)
+    loadChildren: () => import('./pages/historial/historial.module').then( m => m.HistorialPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'buscar-conductor',
-    loadChildren: () => import('./pages/buscar-conductor/buscar-conductor.module').then( m => m.BuscarConductorPageModule)
-  },  {
+    loadChildren: () => import('./pages/buscar-conductor/buscar-conductor.module').then( m => m.BuscarConductorPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'recuperar',
     loadChildren: () => import('./pages/recuperar/recuperar.module').then( m => m.RecuperarPageModule)
   },
   {
     path: 'notificaciones',
-    loadChildren: () => import('./pages/notificaciones/notificaciones.module').then( m => m.NotificacionesPageModule)
+    loadChildren: () => import('./pages/notificaciones/notificaciones.module').then( m => m.NotificacionesPageModule),
+    canActivate: [AuthGuard]
   },
 
 

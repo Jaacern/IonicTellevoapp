@@ -7,6 +7,7 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { Storage } from '@ionic/storage-angular';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   selector: 'app-crear-viaje',
@@ -35,8 +36,12 @@ export class CrearViajePage implements OnInit, OnDestroy {
     private afAuth: AngularFireAuth,
     private alertController: AlertController,
     private router: Router,
-    private storage: Storage
-  ) {}
+    private storage: Storage,
+    private authService: AuthService,
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
 
   async ngOnInit() {
     await this.storage.create();

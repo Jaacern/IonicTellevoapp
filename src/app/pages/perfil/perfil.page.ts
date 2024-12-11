@@ -5,6 +5,8 @@ import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { NavController } from '@ionic/angular';
+import { AuthService } from '../../services/auth.service'; 
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-perfil',
@@ -23,8 +25,14 @@ export class PerfilPage implements OnInit {
     private afAuth: AngularFireAuth,
     private storage: AngularFireStorage,
     private db: AngularFireDatabase,
-    private navCtrl: NavController
-  ) {}
+    private navCtrl: NavController,
+    private authService: AuthService,
+    private router: Router  // Agregar esta línea
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
+
 
   ngOnInit() {
     this.afAuth.authState.subscribe((user) => {

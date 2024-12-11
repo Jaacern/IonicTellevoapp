@@ -7,6 +7,7 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import * as mapboxgl from 'mapbox-gl';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   selector: 'app-conductor',
@@ -29,8 +30,12 @@ export class ConductorPage implements OnInit, OnDestroy {
     private router: Router,
     private alertController: AlertController,
     private afAuth: AngularFireAuth,
-    private menuController: MenuController
-  ) {}
+    private menuController: MenuController,
+    private authService: AuthService,
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
 
   async ngOnInit() {
     await this.storage.create();

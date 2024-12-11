@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-
+import { AuthService } from '../../services/auth.service'; 
+import { Router } from '@angular/router'; 
 @Component({
   selector: 'app-notificaciones',
   templateUrl: './notificaciones.page.html',
@@ -13,8 +14,13 @@ export class NotificacionesPage implements OnInit {
 
   constructor(
     private db: AngularFireDatabase,
-    private afAuth: AngularFireAuth
-  ) {}
+    private afAuth: AngularFireAuth,
+    private authService: AuthService,
+    private router: Router,
+  ) {
+    // Guardar esta ruta como la última visitada
+    this.authService.saveLastPage(this.router.url);
+  }
 
   ngOnInit() {
     this.afAuth.authState.subscribe((user) => {
